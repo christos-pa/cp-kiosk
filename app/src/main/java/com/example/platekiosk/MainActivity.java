@@ -73,6 +73,7 @@ public class MainActivity extends Activity {
     private boolean adminDialogVisible;
     private boolean networkWasLost;
     private boolean screenPinningAttempted;
+    private boolean temporarySystemNavigation;
     private PermissionRequest pendingMediaPermissionRequest;
 
     private final Runnable autoReloadTask = new Runnable() {
@@ -164,8 +165,19 @@ public class MainActivity extends Activity {
         refreshCookieFlushTimer();
         scheduleSystemBarRehide();
         if (KioskConfig.isKioskActive(this)) {
+            temporarySystemNavigation = false;
+            enterLockTaskMode();
+            scheduleLockTaskRecheck();
+        }
+    }
+
+    @Override
+    protected void onUserLeaveHint() {
+        if (KioskConfig.isKioskActive(this) && !adminDialogVisible && !temporarySystemNavigation) {
+            screenPinningAttempted = false;
             enterLockTaskMode();
         }
+        super.onUserLeaveHint();
     }
 
     @Override
@@ -213,6 +225,9 @@ public class MainActivity extends Activity {
         super.onWindowFocusChanged(hasFocus);
         if (hasFocus && !adminDialogVisible) {
             scheduleSystemBarRehide();
+            if (KioskConfig.isKioskActive(this)) {
+                scheduleLockTaskRecheck();
+            }
         }
     }
 
@@ -588,6 +603,7 @@ public class MainActivity extends Activity {
 
     private void openHomeAppSettings() {
         screenPinningAttempted = false;
+        temporarySystemNavigation = true;
         try {
             stopLockTask();
         } catch (IllegalStateException ignored) {
@@ -766,6 +782,7 @@ public class MainActivity extends Activity {
 
     private void exitKioskTemporarily() {
         screenPinningAttempted = false;
+        temporarySystemNavigation = true;
         try {
             stopLockTask();
         } catch (IllegalStateException ignored) {
@@ -1182,6 +1199,23 @@ public class MainActivity extends Activity {
         } else if (!screenPinningAttempted) {
             screenPinningAttempted = true;
             startLockTaskSafely();
+        }
+    }
+
+    private void scheduleLockTaskRecheck() {
+        handler.postDelayed(this::recheckLockTaskMode, 250L);
+        handler.postDelayed(this::recheckLockTaskMode, 1_000L);
+    }
+
+    private void recheckLockTaskMode() {
+        if (!KioskConfig.isKioskActive(this) || adminDialogVisible || temporarySystemNavigation) {
+            return;
+        }
+
+        ActivityManager activityManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+        if (activityManager.getLockTaskModeState() == ActivityManager.LOCK_TASK_MODE_NONE) {
+            screenPinningAttempted = false;
+            enterLockTaskMode();
         }
     }
 
