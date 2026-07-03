@@ -9,6 +9,7 @@ import android.app.role.RoleManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Color;
@@ -586,13 +587,11 @@ public class MainActivity extends Activity {
         if (isDeviceOwner()) {
             return true;
         }
-        Intent homeIntent = new Intent(Intent.ACTION_MAIN);
-        homeIntent.addCategory(Intent.CATEGORY_HOME);
-        ResolveInfo resolvedHome =
-                getPackageManager().resolveActivity(homeIntent, PackageManager.MATCH_DEFAULT_ONLY);
-        return resolvedHome != null
-                && resolvedHome.activityInfo != null
-                && getPackageName().equals(resolvedHome.activityInfo.packageName);
+        ComponentName kioskHome = new ComponentName(this, KioskHomeActivity.class);
+        List<IntentFilter> filters = new ArrayList<>();
+        List<ComponentName> activities = new ArrayList<>();
+        getPackageManager().getPreferredActivities(filters, activities, getPackageName());
+        return activities.contains(kioskHome);
     }
 
     private boolean isDeviceOwner() {
