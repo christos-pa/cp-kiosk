@@ -1,5 +1,6 @@
 package com.example.platekiosk;
 
+import android.Manifest;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
@@ -17,6 +18,10 @@ import java.util.List;
 public final class KioskPolicy {
     private static final String[] REMOTE_CONTROL_PACKAGES = {
             "com.splashtop.streamer.csrs"
+    };
+    private static final String[] KIOSK_RUNTIME_PERMISSIONS = {
+            Manifest.permission.CAMERA,
+            Manifest.permission.RECORD_AUDIO
     };
 
     private KioskPolicy() {
@@ -36,6 +41,7 @@ public final class KioskPolicy {
 
         KioskHomeComponent.setEnabled(context, true);
         policyManager.setLockTaskPackages(admin, lockTaskPackages(context, packageName));
+        grantKioskRuntimePermissions(policyManager, admin, packageName);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             policyManager.setLockTaskFeatures(admin, DevicePolicyManager.LOCK_TASK_FEATURE_NONE);
         }
@@ -103,5 +109,16 @@ public final class KioskPolicy {
         }
 
         return packages.toArray(new String[0]);
+    }
+
+    private static void grantKioskRuntimePermissions(
+            DevicePolicyManager policyManager, ComponentName admin, String packageName) {
+        for (String permission : KIOSK_RUNTIME_PERMISSIONS) {
+            policyManager.setPermissionGrantState(
+                    admin,
+                    packageName,
+                    permission,
+                    DevicePolicyManager.PERMISSION_GRANT_STATE_GRANTED);
+        }
     }
 }
