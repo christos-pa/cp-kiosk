@@ -5,12 +5,20 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.UserManager;
 import android.provider.Settings;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public final class KioskPolicy {
+    private static final String[] REMOTE_CONTROL_PACKAGES = {
+            "com.splashtop.streamer.csrs"
+    };
+
     private KioskPolicy() {
     }
 
@@ -27,7 +35,7 @@ public final class KioskPolicy {
         ComponentName kioskActivity = new ComponentName(context, KioskHomeActivity.class);
 
         KioskHomeComponent.setEnabled(context, true);
-        policyManager.setLockTaskPackages(admin, new String[]{packageName});
+        policyManager.setLockTaskPackages(admin, lockTaskPackages(context, packageName));
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             policyManager.setLockTaskFeatures(admin, DevicePolicyManager.LOCK_TASK_FEATURE_NONE);
         }
@@ -78,5 +86,22 @@ public final class KioskPolicy {
         policyManager.clearUserRestriction(admin, UserManager.DISALLOW_SAFE_BOOT);
         policyManager.setGlobalSetting(admin, Settings.Global.STAY_ON_WHILE_PLUGGED_IN, "0");
         return true;
+    }
+
+    private static String[] lockTaskPackages(Context context, String packageName) {
+        List<String> packages = new ArrayList<>();
+        packages.add(packageName);
+
+        PackageManager packageManager = context.getPackageManager();
+        for (String remoteControlPackage : REMOTE_CONTROL_PACKAGES) {
+            try {
+                packageManager.getPackageInfo(remoteControlPackage, 0);
+                packages.add(remoteControlPackage);
+            } catch (PackageManager.NameNotFoundException ignored) {
+                // Remote support app is optional.
+            }
+        }
+
+        return packages.toArray(new String[0]);
     }
 }
