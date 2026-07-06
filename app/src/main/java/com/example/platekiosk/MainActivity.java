@@ -11,7 +11,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.net.ConnectivityManager;
@@ -840,25 +839,7 @@ public class MainActivity extends Activity {
     }
 
     private void openSystemHomeScreen() {
-        Intent homeIntent = new Intent(Intent.ACTION_MAIN);
-        homeIntent.addCategory(Intent.CATEGORY_HOME);
-        homeIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
-
-        List<ResolveInfo> homeActivities =
-                getPackageManager().queryIntentActivities(homeIntent, PackageManager.MATCH_DEFAULT_ONLY);
-        for (ResolveInfo homeActivity : homeActivities) {
-            if (!getPackageName().equals(homeActivity.activityInfo.packageName)) {
-                homeIntent.setComponent(
-                        new ComponentName(
-                                homeActivity.activityInfo.packageName,
-                                homeActivity.activityInfo.name));
-                startActivity(homeIntent);
-                return;
-            }
-        }
-
-        homeIntent.setComponent(null);
-        startActivity(homeIntent);
+        SystemHomeLauncher.open(this);
     }
 
     private void loadConfiguredUrl() {
