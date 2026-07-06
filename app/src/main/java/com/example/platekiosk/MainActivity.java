@@ -787,7 +787,9 @@ public class MainActivity extends Activity {
         } catch (IllegalStateException ignored) {
             // Preview mode may not have started lock-task mode.
         }
-        KioskPolicy.release(this);
+        if (!isDeviceOwner()) {
+            KioskPolicy.release(this);
+        }
         openSystemHomeScreen();
     }
 
