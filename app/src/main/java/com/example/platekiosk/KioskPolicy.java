@@ -26,6 +26,7 @@ public final class KioskPolicy {
         ComponentName admin = new ComponentName(context, KioskDeviceAdminReceiver.class);
         ComponentName kioskActivity = new ComponentName(context, KioskHomeActivity.class);
 
+        KioskHomeComponent.setEnabled(context, true);
         policyManager.setLockTaskPackages(admin, new String[]{packageName});
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             policyManager.setLockTaskFeatures(admin, DevicePolicyManager.LOCK_TASK_FEATURE_NONE);

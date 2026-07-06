@@ -103,6 +103,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         configureEdgeToEdgeWindow();
         setContentView(R.layout.activity_main);
+        syncHomeComponentState();
 
         if (KioskConfig.isKioskActive(this) && isHomeLaunch(getIntent())) {
             screenPinningAttempted = false;
@@ -583,6 +584,9 @@ public class MainActivity extends Activity {
     }
 
     private boolean isKioskHomeAppEnabled() {
+        if (!KioskHomeComponent.isEnabled(this)) {
+            return false;
+        }
         if (isDeviceOwner()) {
             return true;
         }
@@ -795,6 +799,7 @@ public class MainActivity extends Activity {
     private void setKioskEnabled(boolean enabled) {
         KioskConfig.setKioskActive(this, enabled);
         if (enabled) {
+            KioskHomeComponent.setEnabled(this, true);
             boolean requestingHomeRole = requestHomeRoleIfNeeded();
             KioskPolicy.apply(this);
             applyRuntimeSettings();
@@ -812,6 +817,7 @@ public class MainActivity extends Activity {
             // Preview mode may not have started lock-task mode.
         }
         KioskPolicy.release(this);
+        KioskHomeComponent.setEnabled(this, false);
         handler.removeCallbacks(systemBarRehideTask);
         Toast.makeText(this, R.string.kiosk_disabled, Toast.LENGTH_SHORT).show();
     }
@@ -1211,8 +1217,13 @@ public class MainActivity extends Activity {
 
     private void applyKioskPolicyIfActive() {
         if (KioskConfig.isKioskActive(this)) {
+            KioskHomeComponent.setEnabled(this, true);
             KioskPolicy.apply(this);
         }
+    }
+
+    private void syncHomeComponentState() {
+        KioskHomeComponent.setEnabled(this, KioskConfig.isKioskActive(this));
     }
 
     private boolean isHomeLaunch(Intent intent) {

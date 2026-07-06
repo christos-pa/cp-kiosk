@@ -19,6 +19,7 @@ public class KioskHomeActivity extends Activity {
             startActivity(kioskIntent);
         } else {
             SystemHomeLauncher.open(this);
+            KioskHomeComponent.setEnabled(this, false);
         }
 
         finish();
